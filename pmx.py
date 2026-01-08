@@ -26,12 +26,21 @@ async def run_pvesh_command(pvesh_command, api_path, options=[]):
             return {}
 
         result = stdout.decode().strip()
-        if result == "" or result == None:
+        if result == "" or result is None:
             # happens on ha changes
             return {}
-        if pvesh_command != "delete":
+        
+        if pvesh_command == "delete":
+            return {}
+
+        try:
+            # Try to parse as JSON
             return json.loads(result)
-        return {}
+        except json.JSONDecodeError:
+            # If parsing fails, it's likely a raw string (like a UPID)
+            # Return it wrapped in a dict to prevent crashes
+            return {"message": result}
+
     except subprocess.CalledProcessError as e:
         print(
             f"Error executing pvesh command on {api_path}: {e.stderr}", file=sys.stderr)
